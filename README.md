@@ -5,11 +5,13 @@ AlexNet is trained from the German Trafic Sign Dataset from https://sid.erda.dk/
 
 The dataset structure should be:
 
+<pre>
 ./data/  
-    -- train/  
+-- train/  
         -- 00000/  
             -- 00000_00000.ppm  
             -- 00000_00001.ppm  
             -- ...  
         -- ...  
-    ...  
+-- ...
+</pre>
