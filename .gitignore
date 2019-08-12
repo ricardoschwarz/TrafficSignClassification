@@ -1,5 +1,8 @@
 # python
 venv/
 
-#vscode
+# vscode
 .vscode/
+
+# data
+data/
