@@ -1,96 +1,82 @@
+# ----------
 # script to train a cnn (probably AlexNet) with the German Trafic Sign Dataset from https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/published-archive.html
+# ----------
 
-# TODO
 
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout, Flatten, Conv2D, MaxPooling2D
-from keras.layers.normalization import BatchNormalization
+# load the dataset
+import os
+train_folder = "data/train"
+
+filenames = []
+for subdir, dirs, files in os.walk(train_folder):
+    for file in files: 
+        if file.endswith(".ppm"):
+            filenames.append(os.path.join(subdir, file))
+
+print("Working with {0} images".format(len(files)))
+
+from scipy import ndimage
+from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+
+train_files = []
+y_train = []
+i=0
+for _file in filenames:
+    train_files.append(_file)
+    label_in_file = _file.find("_")
+    y_train.append(int(_file[11:16]))
+    
+print("Files in train_files: %d" % len(train_files))
+
+# Original Dimensions
+image_height = 50
+image_width = 50
+ratio = 1
+
+image_width = int(image_width / ratio)
+image_height = int(image_height / ratio)
+
+channels = 3
+nb_classes = 1
+
 import numpy as np
-np.random.seed(1000)
+dataset = np.ndarray(shape=(len(train_files), image_height, image_width, channels),
+                     dtype=np.float32)
 
-# create a data generator
-datagen = keras.preprocessing.image.ImageDataGenerator()
+import PIL
+i = 0
+for _file in train_files:
+    img = load_img(_file)  # this is a PIL image
+    img = img.resize((image_height,image_width), PIL.Image.ANTIALIAS)
+    # Convert to Numpy Array
+    x = img_to_array(img)  
+    # x = x.reshape((30, 29, 3))
+    # Normalize
+    x = (x - 128.0) / 128.0
+    dataset[i] = x
+    i += 1
+    if i % 250 == 0:
+        print("%d images to array" % i)
+print("All images to array!")
 
-# load and iterate training dataset
-train_it = datagen.flow_from_directory('dataset/train/', class_mode='binary', batch_size=64)
+from sklearn.model_selection import train_test_split
 
-# (3) Create a sequential model
-model = Sequential()
+#Splitting 
+X_train, X_test, y_train, y_test = train_test_split(dataset, y_train, test_size=0.2, random_state=33)
+X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size=0.5, random_state=33)
+print("Train set size: {0}, Val set size: {1}, Test set size: {2}".format(len(X_train), len(X_val), len(X_test)))
 
-# 1st Convolutional Layer
-model.add(Conv2D(filters=96, input_shape=(224,224,3), kernel_size=(11,11),\
- strides=(4,4), padding='valid'))
-model.add(Activation('relu'))
-# Pooling 
-model.add(MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='valid'))
-# Batch Normalisation before passing it to the next layer
-model.add(BatchNormalization())
+# from tensorflow.python import keras
+# model = keras.Sequential([
+#         keras.layers.Flatten(input_shape=(28, 28)),
+#         keras.layers.Dense(128, activation="relu"),
+#         keras.layers.Dense(10, activation="softmax")
+#     ])
 
-# 2nd Convolutional Layer
-model.add(Conv2D(filters=256, kernel_size=(11,11), strides=(1,1), padding='valid'))
-model.add(Activation('relu'))
-# Pooling
-model.add(MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='valid'))
-# Batch Normalisation
-model.add(BatchNormalization())
+# model.compile(optimizer='adam',
+#         loss='sparse_categorical_crossentropy',
+#         metrics=['accuracy'])
 
-# 3rd Convolutional Layer
-model.add(Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), padding='valid'))
-model.add(Activation('relu'))
-# Batch Normalisation
-model.add(BatchNormalization())
+# model.fit(X_train, y_train, epochs=5)
 
-# 4th Convolutional Layer
-model.add(Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), padding='valid'))
-model.add(Activation('relu'))
-# Batch Normalisation
-model.add(BatchNormalization())
-
-# 5th Convolutional Layer
-model.add(Conv2D(filters=256, kernel_size=(3,3), strides=(1,1), padding='valid'))
-model.add(Activation('relu'))
-# Pooling
-model.add(MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='valid'))
-# Batch Normalisation
-model.add(BatchNormalization())
-
-# Passing it to a dense layer
-model.add(Flatten())
-# 1st Dense Layer
-model.add(Dense(4096, input_shape=(224*224*3,)))
-model.add(Activation('relu'))
-# Add Dropout to prevent overfitting
-model.add(Dropout(0.4))
-# Batch Normalisation
-model.add(BatchNormalization())
-
-# 2nd Dense Layer
-model.add(Dense(4096))
-model.add(Activation('relu'))
-# Add Dropout
-model.add(Dropout(0.4))
-# Batch Normalisation
-model.add(BatchNormalization())
-
-# 3rd Dense Layer
-model.add(Dense(1000))
-model.add(Activation('relu'))
-# Add Dropout
-model.add(Dropout(0.4))
-# Batch Normalisation
-model.add(BatchNormalization())
-
-# Output Layer
-model.add(Dense(17))
-model.add(Activation('softmax'))
-
-model.summary()
-
-# (4) Compile 
-model.compile(loss='categorical_crossentropy', optimizer='adam',\
- metrics=['accuracy'])
-
-# (5) Train
-model.fit(train_it, train_it, batch_size=64, epochs=1, verbose=1, \
-validation_split=0.2, shuffle=True)
+# test_loss, test_acc = model.evaluate(X_test, y_test)
