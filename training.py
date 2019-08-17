@@ -13,7 +13,7 @@ for subdir, dirs, files in os.walk(train_folder):
         if file.endswith(".ppm"):
             filenames.append(os.path.join(subdir, file))
 
-print("Working with {0} images".format(len(files)))
+print("Working with {0} images".format(len(filenames)))
 
 from scipy import ndimage
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
@@ -31,10 +31,6 @@ print("Files in train_files: %d" % len(train_files))
 # Original Dimensions
 image_height = 50
 image_width = 50
-ratio = 1
-
-image_width = int(image_width / ratio)
-image_height = int(image_height / ratio)
 
 channels = 3
 nb_classes = 1
@@ -52,7 +48,7 @@ for _file in train_files:
     x = img_to_array(img)  
     # x = x.reshape((30, 29, 3))
     # Normalize
-    x = (x - 128.0) / 128.0
+    x = x / 255.0
     dataset[i] = x
     i += 1
     if i % 250 == 0:
@@ -62,9 +58,8 @@ print("All images to array!")
 from sklearn.model_selection import train_test_split
 
 #Splitting 
-X_train, X_test, y_train, y_test = train_test_split(dataset, y_train, test_size=0.2, random_state=33)
-X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size=0.5, random_state=33)
-print("Train set size: {0}, Val set size: {1}, Test set size: {2}".format(len(X_train), len(X_val), len(X_test)))
+X_train, X_val, y_train, y_val = train_test_split(dataset, y_train, test_size=0.2, random_state=33)
+print("Train set size: {0}, Val set size: {1}, Test set size: NOT YET".format(len(X_train), len(X_val)))
 
 # from tensorflow.python import keras
 # model = keras.Sequential([
