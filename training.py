@@ -6,6 +6,7 @@
 
 ## useful methods
 
+import numpy as np
 import matplotlib.pyplot as plt
 def show_images(images, labels, classes):
 	"""shows a diagram from input images with corresponding class labels
@@ -78,46 +79,127 @@ def load_training_data(image_dir):
 
 	return (dataset, y_train)
   
+# Look at confusion matrix
+from sklearn.metrics import confusion_matrix
+import itertools
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
 
 ## main
 
-if __name__ == "__main__":
+# load the dataset
+train_image_dir = "data/train"
+X_data, y_data = load_training_data(train_image_dir)
 
-	# load the dataset
-	train_image_dir = "data/train"
-	X_data, y_data = load_training_data(train_image_dir)
+#Splitting 
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2, random_state=15)
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=33)
+print("Train set size: {0}, Val set size: {1}, Test set size: {2}".format(len(X_train), len(X_val), len(X_test)))
 
-	#Splitting 
-	from sklearn.model_selection import train_test_split
-	X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2, random_state=15)
-	X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=33)
-	print("Train set size: {0}, Val set size: {1}, Test set size: {2}".format(len(X_train), len(X_val), len(X_test)))
+from keras.models import Sequential
+from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
+model = Sequential([
+		Flatten(input_shape=(50, 50, 3)),
+		Dense(128, activation="relu"),
+		Dense(10, activation="softmax")
+	])
 
-	from tensorflow.python import keras
-	model = keras.Sequential([
-			keras.layers.Flatten(input_shape=(50, 50, 3)),
-			keras.layers.Dense(128, activation="relu"),
-			keras.layers.Dense(10, activation="softmax")
-		])
+model.compile(optimizer='adam',
+		loss='sparse_categorical_crossentropy',
+		metrics=['accuracy'])
 
-	model.compile(optimizer='adam',
-			loss='sparse_categorical_crossentropy',
-			metrics=['accuracy'])
+history = model.fit(X_train, y_train, epochs=5, validation_data=(X_val, y_val))
 
-	model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y_val))
+# Plot the loss and accuracy curves for training and validation of the baseline model
+from matplotlib import pyplot as plt
+fig, ax = plt.subplots(2,1)
+ax[0].plot(history.history['loss'], color='b', label="Training loss")
+ax[0].plot(history.history['val_loss'], color='r', label="validation loss",axes =ax[0])
+legend = ax[0].legend(loc='best', shadow=True)
 
-	test_loss, test_acc = model.evaluate(X_test, y_test)
+ax[1].plot(history.history['acc'], color='b', label="Training accuracy")
+ax[1].plot(history.history['val_acc'], color='r',label="Validation accuracy")
+legend = ax[1].legend(loc='best', shadow=True)
+plt.show() 
 
-	classes = { 
-		0 : "Limit 20", 
-		1 : "Limit 30", 
-		2 : "Limit 50",
-		3 : "Limit 60",
-		4 : "Limit 70",
-		5 : "Limit 80",
-		6 : "Limit Not 80",
-		7 : "Limit 100",
-		8 : "Limit 120"
-	}
- 
-	show_images(X_train, y_train, classes)
+test_loss, test_acc = model.evaluate(X_test, y_test)
+
+# Building a more complex model with a convolutional layer + pooling layer
+modelConv = Sequential()
+modelConv.add(Conv2D(10, (3,3), strides= (1,1), padding='same', input_shape=(50,50,3), activation='relu'))
+modelConv.add(MaxPooling2D(pool_size=(2, 2)))
+modelConv.add(Flatten())
+modelConv.add(Dense(100, activation="relu"))
+modelConv.add(Dense(11, activation="softmax"))
+
+modelConv.compile(optimizer='adam',
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['accuracy'])
+
+history = modelConv.fit(X_train, y_train, validation_data = (X_val, y_val) ,epochs=10)
+
+# Plot loss and accuracy curves for second model
+fig, ax = plt.subplots(2, 1)
+ax[0].plot(history.history['loss'], color='b', label="Training loss")
+ax[0].plot(history.history['val_loss'], color='r',
+           label="validation loss", axes=ax[0])
+legend = ax[0].legend(loc='best', shadow=True)
+
+ax[1].plot(history.history['acc'], color='b', label="Training accuracy")
+ax[1].plot(history.history['val_acc'], color='r', label="Validation accuracy")
+legend = ax[1].legend(loc='best', shadow=True)
+plt.show()
+
+# Predict the values from the validation dataset
+y_pred = model.predict(X_val)
+# Convert predictions classes to one hot vectors 
+y_pred_classes = np.argmax(y_pred,axis = 1) 
+# Convert validation observations to one hot vectors
+y_true = y_val 
+# compute the confusion matrix
+confusion_mtx = confusion_matrix(y_true, y_pred_classes)
+
+# plot the confusion matrix
+plot_confusion_matrix(confusion_mtx, classes = range(11))
+plt.show()
+
+classes = {
+    0: "Limit 20",
+    1: "Limit 30",
+    2: "Limit 50",
+    3: "Limit 60",
+    4: "Limit 70",
+    5: "Limit 80",
+    6: "Limit Not 80",
+    7: "Limit 100",
+    8: "Limit 120"
+}
+
+show_images(X_train, y_train, classes)
