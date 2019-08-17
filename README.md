@@ -1,7 +1,7 @@
 # SpeedLimit_DL
-A deep learning project to estimate the current speedlimit from a front camera video feed.
+A deep learning project that aims to estimate the current speedlimit from a front camera video feed. (TODO)
 
-AlexNet is trained from the German Trafic Sign Dataset from https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/published-archive.html
+CNNs are trained from the German Trafic Sign Dataset from https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/published-archive.html
 
 The dataset structure should be:
 
@@ -13,5 +13,4 @@ The dataset structure should be:
             -- 00000_00001.ppm  
             -- ...  
         -- ...  
--- ...
 </pre>
