@@ -15,9 +15,10 @@ The dataset structure should be:
         -- ...  
 </pre>
 
-Labels of all classes: 
-| Nr    | Label                                        |
-|-------|----------------------------------------------|
+Labels of all classes:
+
+| **Nr**    | **Label**                               |
+| ----- | -------------------------------------------- |
 | 00000 | SpeedLimit = 20                              |
 | 00001 | SpeedLimit = 30                              |
 | 00002 | SpeedLimit = 50                              |
@@ -61,3 +62,4 @@ Labels of all classes:
 | 00040 | Roundabout                                   |
 | 00041 | Overtaking is now allowed                    |
 | 00042 | Overtaking is now allowed for trucks         |
+
