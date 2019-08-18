@@ -4,6 +4,7 @@
 # run image_preprocessing.py once before running this script
 # ----------
 
+
 ## useful methods
 
 import numpy as np
@@ -27,6 +28,7 @@ def show_images(images, labels, classes):
 		plt.xlabel(classes[labels[i]])
 					
 	plt.show(block=False)
+
 
 def load_training_data(image_dir):
 	"""Loads training images.
@@ -63,12 +65,11 @@ def load_training_data(image_dir):
 	dataset = np.ndarray(shape=(len(train_files), image_height, image_width, channels),
 						dtype=np.float32)
 
-	import PIL
 	i = 0
 	for _file in train_files:
 		img = load_img(_file)  # this is a PIL image
 		# Convert to Numpy Array
-		x = img_to_array(img)  
+		x = img_to_array(img)
 		# Normalize
 		x = x / 255.0
 		dataset[i] = x
@@ -79,6 +80,7 @@ def load_training_data(image_dir):
 
 	return (dataset, y_train)
   
+
 # Look at confusion matrix
 from sklearn.metrics import confusion_matrix
 import itertools
@@ -90,9 +92,9 @@ def plot_confusion_matrix(cm, classes,
 	This function prints and plots the confusion matrix.
 	Normalization can be applied by setting `normalize=True`.
 	"""
-	plt.figure()
+	fig = plt.figure()
+	fig.suptitle(title)
 	plt.imshow(cm, interpolation='nearest', cmap=cmap)
-	plt.title(title)
 	plt.colorbar()
 	tick_marks = np.arange(len(classes))
 	plt.xticks(tick_marks, classes, rotation=45)
@@ -107,9 +109,70 @@ def plot_confusion_matrix(cm, classes,
 					horizontalalignment="center",
 					color="white" if cm[i, j] > thresh else "black")
 
-	plt.tight_layout()
 	plt.ylabel('True label')
 	plt.xlabel('Predicted label')
+	plt.show(block=False)
+
+
+from keras.models import Sequential
+from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
+def get_basic_model():
+	"""Create and compile a basic model"""
+	model = Sequential([
+		Flatten(input_shape=(50, 50, 3)),
+		Dense(128, activation="relu"),
+		Dense(10, activation="softmax")
+	])
+	model.compile(optimizer='adam',
+		loss='sparse_categorical_crossentropy',
+		metrics=['accuracy'])
+	return model
+
+
+def get_complex_model():
+	"""Create and compile a more complex model with a convolutional layer + pooling layer"""
+	modelConv = Sequential()
+	modelConv.add(Conv2D(10, (3,3), strides= (1,1), padding='same', input_shape=(50,50,3), activation='relu'))
+	modelConv.add(MaxPooling2D(pool_size=(2, 2)))
+	modelConv.add(Flatten())
+	modelConv.add(Dense(100, activation="relu"))
+	modelConv.add(Dense(11, activation="softmax"))
+
+	modelConv.compile(optimizer='adam',
+					loss='sparse_categorical_crossentropy',
+					metrics=['accuracy'])
+
+	return modelConv
+
+def plot_history(history, title="Titel"):
+	"""plot loss and accuracy from history"""
+	import matplotlib.pyplot as plt
+	plt.title=title
+	fig, ax = plt.subplots(2, 1)
+	fig.suptitle(title)
+	ax[0].plot(history.history['loss'], color='b', label="Training loss")
+	ax[0].plot(history.history['val_loss'], color='r', label="validation loss", axes=ax[0])
+	ax[0].set_xlabel('Epochs')
+	ax[0].set_ylabel('Loss')
+	legend = ax[0].legend(loc='best', shadow=True)
+
+	ax[1].plot(history.history['acc'], color='b', label="Training accuracy")
+	ax[1].plot(history.history['val_acc'], color='r', label="Validation accuracy")
+	ax[1].set_xlabel('Epochs')
+	ax[1].set_ylabel('Validation')
+	legend = ax[1].legend(loc='best', shadow=True)
+	plt.show(block=False)
+
+
+def compute_confusion_matrix(model, X_val, y_val):
+	"""plot the confusion matrix"""
+	y_pred = model.predict(X_val)
+
+	# Convert predictions classes to one hot vectors 
+	y_pred_classes = np.argmax(y_pred,axis = 1) 
+	
+	confusion_mtx = confusion_matrix(y_val, y_pred_classes)
+	return confusion_mtx
 
 
 ## main
@@ -118,90 +181,75 @@ def plot_confusion_matrix(cm, classes,
 train_image_dir = "data/train"
 X_data, y_data = load_training_data(train_image_dir)
 
-#Splitting 
+# splitting 
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2, random_state=15)
 X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=33)
 print("Train set size: {0}, Val set size: {1}, Test set size: {2}".format(len(X_train), len(X_val), len(X_test)))
 
-from keras.models import Sequential
-from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
-model = Sequential([
-		Flatten(input_shape=(50, 50, 3)),
-		Dense(128, activation="relu"),
-		Dense(10, activation="softmax")
-	])
+# base model
+basic_model = get_basic_model()
+history = basic_model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y_val))
+plot_history(history, "Basic Model")
+confusion_mtx_basic = compute_confusion_matrix(basic_model, X_val, y_val)
+plot_confusion_matrix(confusion_mtx_basic, classes = range(9), title="CMatrix - Basic Model")
+test_loss, test_acc = basic_model.evaluate(X_test, y_test)
 
-model.compile(optimizer='adam',
-		loss='sparse_categorical_crossentropy',
-		metrics=['accuracy'])
-
-history = model.fit(X_train, y_train, epochs=5, validation_data=(X_val, y_val))
-
-# Plot the loss and accuracy curves for training and validation of the baseline model
-from matplotlib import pyplot as plt
-fig, ax = plt.subplots(2,1)
-ax[0].plot(history.history['loss'], color='b', label="Training loss")
-ax[0].plot(history.history['val_loss'], color='r', label="validation loss",axes =ax[0])
-legend = ax[0].legend(loc='best', shadow=True)
-
-ax[1].plot(history.history['acc'], color='b', label="Training accuracy")
-ax[1].plot(history.history['val_acc'], color='r',label="Validation accuracy")
-legend = ax[1].legend(loc='best', shadow=True)
-plt.show(block=False) 
-
-test_loss, test_acc = model.evaluate(X_test, y_test)
-
-# Building a more complex model with a convolutional layer + pooling layer
-modelConv = Sequential()
-modelConv.add(Conv2D(10, (3,3), strides= (1,1), padding='same', input_shape=(50,50,3), activation='relu'))
-modelConv.add(MaxPooling2D(pool_size=(2, 2)))
-modelConv.add(Flatten())
-modelConv.add(Dense(100, activation="relu"))
-modelConv.add(Dense(11, activation="softmax"))
-
-modelConv.compile(optimizer='adam',
-                  loss='sparse_categorical_crossentropy',
-                  metrics=['accuracy'])
-
-history = modelConv.fit(X_train, y_train, validation_data = (X_val, y_val) ,epochs=10)
-
-# Plot loss and accuracy curves for second model
-fig, ax = plt.subplots(2, 1)
-ax[0].plot(history.history['loss'], color='b', label="Training loss")
-ax[0].plot(history.history['val_loss'], color='r',
-           label="validation loss", axes=ax[0])
-legend = ax[0].legend(loc='best', shadow=True)
-
-ax[1].plot(history.history['acc'], color='b', label="Training accuracy")
-ax[1].plot(history.history['val_acc'], color='r', label="Validation accuracy")
-legend = ax[1].legend(loc='best', shadow=True)
-plt.show(block=False)
-
-# Predict the values from the validation dataset
-y_pred = model.predict(X_val)
-# Convert predictions classes to one hot vectors 
-y_pred_classes = np.argmax(y_pred,axis = 1) 
-# Convert validation observations to one hot vectors
-y_true = y_val 
-# compute the confusion matrix
-confusion_mtx = confusion_matrix(y_true, y_pred_classes)
-
-# plot the confusion matrix
-plot_confusion_matrix(confusion_mtx, classes = range(11))
-plt.show(block=False)
+# more complex model
+complex_model = get_complex_model()
+history = complex_model.fit(X_train, y_train, epochs=10, validation_data = (X_val, y_val))
+plot_history(history, "Complex Model")
+confusion_mtx_complex = compute_confusion_matrix(complex_model, X_val, y_val)
+plot_confusion_matrix(confusion_mtx_complex, classes = range(9), title="CMatrix - Complex Model")
+test_loss, test_acc = complex_model.evaluate(X_test, y_test)
 
 classes = {
-    0: "Limit 20",
-    1: "Limit 30",
-    2: "Limit 50",
-    3: "Limit 60",
-    4: "Limit 70",
-    5: "Limit 80",
-    6: "Limit Not 80",
-    7: "Limit 100",
-    8: "Limit 120"
+    0: "Speedlimit = 20",
+    1: "Speedlimit = 30",
+    2: "Speedlimit = 50",
+    3: "Speedlimit = 60",
+    4: "Speedlimit = 70",
+    5: "Speedlimit = 80",
+    6: "End of Speedlimit = 80",
+    7: "End of Speedlimit = 100",
+    8: "Speedlimit = 120",
+    9: "No overtaking allowed for cars",
+    10: "No overtaking allowed for trucks",
+    11: "Right of way at next junction",
+    12: "Right of way on this road",
+    13: "Yield right of way",
+    14: "Stop. Yield right of way",
+    15: "All vehicles banned for this road",
+    16: "All trucks banned for this road",
+    17: "No Entry!",
+    18: "Danger Spot",
+    19: "Sharp Left Corner",
+    20: "Sharp Right Corner",
+    21: "Double Curve",
+    22: "Uneven Road",
+    23: "Slip Hazard",
+    24: "Road narrows",
+    25: "Roadworks",
+    26: "Traffic Light",
+    27: "Pedestrians",
+    28: "Children",
+    29: "Cyclists",
+    30: "Slipperiness",
+    31: "Deer Path",
+    32: "End of all constraints",
+    33: "Prescribed driving direction right",
+    34: "Prescribed driving direction left",
+    35: "Prescribed driving direction ahead",
+    36: "Prescribed driving direction ahead and right",
+    37: "Prescribed driving direction ahead and left",
+    38: "Prescribed passing at the right side",
+    39: "Prescribed passing at the left side",
+    40: "Roundabout",
+    41: "Overtaking is now allowed",
+    42: "Overtaking is now allowed for trucks",
 }
 
 show_images(X_train, y_train, classes)
+
+plt.tight_layout() # for beautiful plots
 plt.show() # to pause execution
