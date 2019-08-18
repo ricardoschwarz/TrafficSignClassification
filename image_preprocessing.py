@@ -27,5 +27,5 @@ def resize_images(image_dir):
             print("%d images resized" % i)
         
 
-image_folder = "data/"
+image_folder = "data/train"
 resize_images(image_folder)
