@@ -193,7 +193,6 @@ history = basic_model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y
 plot_history(history, "Basic Model")
 confusion_mtx_basic = compute_confusion_matrix(basic_model, X_val, y_val)
 plot_confusion_matrix(confusion_mtx_basic, classes = range(9), title="CMatrix - Basic Model")
-test_loss, test_acc = basic_model.evaluate(X_test, y_test)
 
 # more complex model
 complex_model = get_complex_model()
@@ -201,7 +200,12 @@ history = complex_model.fit(X_train, y_train, epochs=10, validation_data = (X_va
 plot_history(history, "Complex Model")
 confusion_mtx_complex = compute_confusion_matrix(complex_model, X_val, y_val)
 plot_confusion_matrix(confusion_mtx_complex, classes = range(9), title="CMatrix - Complex Model")
-test_loss, test_acc = complex_model.evaluate(X_test, y_test)
+
+# test models
+test_loss_basic, test_acc_basic = basic_model.evaluate(X_test, y_test)
+print("---Basic Model Test\nTest Loss: {0}\nTest Accuracy: {1}".format(test_acc_basic, test_acc_basic))
+test_loss_complex, test_acc_complex = complex_model.evaluate(X_test, y_test)
+print("---Complex Model Test\nTest Loss: {0}\nTest Accuracy: {1}".format(test_acc_complex, test_acc_complex))
 
 classes = {
     0: "Speedlimit = 20",
