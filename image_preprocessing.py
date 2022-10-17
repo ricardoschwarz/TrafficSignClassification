@@ -1,5 +1,5 @@
 import os
-from keras.preprocessing.image import load_img
+from keras.utils.image_utils import load_img
  
 def resize_images(image_dir):
     """loads, resizes and saves all training images to fixed size
@@ -17,12 +17,10 @@ def resize_images(image_dir):
                 filenames.append(os.path.join(subdir, file))
 
     import PIL
-    i = 0
-    for _file in filenames:
+    for i, _file in enumerate(filenames):
         img = load_img(_file)  # this is a PIL image
         img = img.resize((50, 50), PIL.Image.ANTIALIAS)
         img.save(_file)
-        i+=1
         if i % 250 == 0:
             print("%d images resized" % i)
         
