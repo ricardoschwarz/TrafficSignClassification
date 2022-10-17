@@ -6,6 +6,7 @@
 
 from utils import load_training_data, get_basic_model, get_complex_model, compute_confusion_matrix, plot_confusion_matrix, plot_history, show_images, classes
 from matplotlib import pyplot as plt
+import numpy as np
 
 # load the dataset
 train_image_dir = "data/train"
@@ -16,6 +17,13 @@ from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2, random_state=15)
 X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=33)
 print("Train set size: {0}, Val set size: {1}, Test set size: {2}".format(len(X_train), len(X_val), len(X_test)))
+
+X_train = np.array(X_train)
+y_train = np.array(y_train)
+X_val = np.array(X_val)
+y_val = np.array(y_val)
+X_test = np.array(X_test)
+y_test = np.array(y_test)
 
 # base model
 basic_model = get_basic_model()
@@ -30,6 +38,7 @@ history = complex_model.fit(X_train, y_train, epochs=10, validation_data = (X_va
 plot_history(history, "Complex Model")
 confusion_mtx_complex = compute_confusion_matrix(complex_model, X_val, y_val)
 plot_confusion_matrix(confusion_mtx_complex, classes = range(9), title="CMatrix - Complex Model")
+complex_model.save('models/complex_model')
 
 # test models
 test_loss_basic, test_acc_basic = basic_model.evaluate(X_test, y_test)

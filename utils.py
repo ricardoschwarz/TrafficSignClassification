@@ -92,7 +92,7 @@ def load_training_data(image_dir):
 	print("Working with {0} training images".format(len(train_files)))
 
 	from scipy import ndimage
-	from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+	from keras.utils import img_to_array, load_img
 
 	# Original Dimensions
 	image_height = 50
@@ -112,7 +112,7 @@ def load_training_data(image_dir):
 		x = x / 255.0
 		dataset[i] = x
 		i += 1
-		if i % 250 == 0:
+		if i % 1000 == 0:
 			print("%d images to array" % i)
 	print("All images to array!")
 
@@ -194,8 +194,8 @@ def plot_history(history, title="Titel"):
 	ax[0].set_ylabel('Loss')
 	legend = ax[0].legend(loc='best', shadow=True)
 
-	ax[1].plot(history.history['acc'], color='b', label="Training accuracy")
-	ax[1].plot(history.history['val_acc'], color='r', label="Validation accuracy")
+	ax[1].plot(history.history['accuracy'], color='b', label="Training accuracy")
+	ax[1].plot(history.history['val_accuracy'], color='r', label="Validation accuracy")
 	ax[1].set_xlabel('Epochs')
 	ax[1].set_ylabel('Validation')
 	legend = ax[1].legend(loc='best', shadow=True)
