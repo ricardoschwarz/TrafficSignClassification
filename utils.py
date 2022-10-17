@@ -103,15 +103,13 @@ def load_training_data(image_dir):
 	dataset = np.ndarray(shape=(len(train_files), image_height, image_width, channels),
 						dtype=np.float32)
 
-	i = 0
-	for _file in train_files:
+	for i, _file in enumerate(train_files):
 		img = load_img(_file)  # this is a PIL image
 		# Convert to Numpy Array
 		x = img_to_array(img)
 		# Normalize
 		x = x / 255.0
 		dataset[i] = x
-		i += 1
 		if i % 1000 == 0:
 			print("%d images to array" % i)
 	print("All images to array!")
