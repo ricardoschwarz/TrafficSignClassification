@@ -1,5 +1,5 @@
 # TrafficSignClassification
-A deep learning project that aims to estimate the current speedlimit from a front camera video feed. (TODO)
+A deep learning project that aims to classify visible traffic signs. Aims to be extended for live detection and classification.
 
 CNNs are trained from the German Trafic Sign Dataset from https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/published-archive.html
 
