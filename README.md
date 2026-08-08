@@ -78,3 +78,25 @@ Labels of all classes:
 | 00041 | Overtaking is now allowed                    |
 | 00042 | Overtaking is now allowed for trucks         |
 
+## Live inference
+
+`predict.py` runs the trained CNN live against a webcam or a video file:
+
+```
+python predict.py --model models/complex_model --source 0 --threshold 0.6
+```
+
+- `--model`: path to a trained Keras model directory (default `models/complex_model`, the
+  output of `training.py`).
+- `--source`: webcam index (e.g. `0`) or a path to a video file (default `0`).
+- `--threshold`: minimum classification confidence (0-1) required to draw a label (default
+  `0.6`).
+
+A window opens showing the annotated video; press `q` to quit.
+
+**Caveat:** candidate sign regions are found with `detect.py`, which uses a classic
+color/shape heuristic (HSV thresholding for red/blue, filtered by contour area and aspect
+ratio) — it is not a trained detector. Expect missed detections for signs outside typical
+red/blue coloring and false positives on other red/blue objects in frame. A trained detector
+model would be a good future upgrade.
+
