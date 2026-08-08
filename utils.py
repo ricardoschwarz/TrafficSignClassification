@@ -92,7 +92,7 @@ def load_training_data(image_dir):
 	print("Working with {0} training images".format(len(train_files)))
 
 	from scipy import ndimage
-	from keras.utils import img_to_array, load_img
+	from tensorflow.keras.utils import img_to_array, load_img
 
 	# Original Dimensions
 	image_height = 50
@@ -150,8 +150,8 @@ def plot_confusion_matrix(cm, classes,
 	plt.show(block=False)
 
 
-from keras.models import Sequential
-from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
 def get_basic_model(input_shape=(50, 50, 3), output_shape=43):
 	"""Create and compile a basic model"""
 	model = Sequential([

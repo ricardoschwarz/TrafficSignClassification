@@ -3,6 +3,21 @@ A deep learning project that aims to classify visible traffic signs. Aims to be 
 
 CNNs are trained from the German Trafic Sign Dataset from https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/published-archive.html
 
+## Setup
+
+1. Create a virtual environment and install dependencies:
+   ```
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+2. Download the training archive ("GTSRB_Final_Training_Images.zip" or equivalent) from the
+   German Traffic Sign Dataset page linked above, and unpack the per-class `.ppm` image folders
+   into `data/train/` so that the layout matches the structure shown below.
+3. Run `python image_preprocessing.py` once to resize all training images in place to 50x50.
+4. Run `python training.py` to train the basic and complex CNNs. The trained complex model is
+   saved to `models/complex_model`.
+
 The dataset structure should be:
 
 <pre>
