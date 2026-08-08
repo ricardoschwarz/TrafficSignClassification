@@ -4,49 +4,60 @@
 # run image_preprocessing.py once before running this script
 # ----------
 
-from utils import load_training_data, get_basic_model, get_complex_model, compute_confusion_matrix, plot_confusion_matrix, plot_history, show_images, classes
+import os
+
+import tensorflow as tf
 from matplotlib import pyplot as plt
-import numpy as np
+
+from data import load_training_data
+from labels import classes
+from models import get_basic_model, get_complex_model
+from plotting import compute_confusion_matrix, plot_confusion_matrix, plot_history, show_images
+
+MAX_EPOCHS = 100
+MODELS_DIR = "models"
 
 # load the dataset
 train_image_dir = "data/train"
-X_data, y_data = load_training_data(train_image_dir)
+train_ds, val_ds, test_ds = load_training_data(train_image_dir)
 
-# splitting 
-from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2, random_state=15)
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=33)
-print("Train set size: {0}, Val set size: {1}, Test set size: {2}".format(len(X_train), len(X_val), len(X_test)))
 
-X_train = np.array(X_train)
-y_train = np.array(y_train)
-X_val = np.array(X_val)
-y_val = np.array(y_val)
-X_test = np.array(X_test)
-y_test = np.array(y_test)
+def callbacks_for(name):
+	os.makedirs(MODELS_DIR, exist_ok=True)
+	return [
+		tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True),
+		tf.keras.callbacks.ModelCheckpoint(
+			filepath=os.path.join(MODELS_DIR, f"{name}_best.weights.h5"),
+			monitor="val_loss",
+			save_best_only=True,
+			save_weights_only=True,
+		),
+	]
+
 
 # base model
 basic_model = get_basic_model()
-history = basic_model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y_val))
+history = basic_model.fit(train_ds, epochs=MAX_EPOCHS, validation_data=val_ds, callbacks=callbacks_for("basic_model"))
 plot_history(history, "Basic Model")
-confusion_mtx_basic = compute_confusion_matrix(basic_model, X_val, y_val)
+confusion_mtx_basic = compute_confusion_matrix(basic_model, val_ds)
 plot_confusion_matrix(confusion_mtx_basic, classes = range(9), title="CMatrix - Basic Model")
 
 # more complex model
 complex_model = get_complex_model()
-history = complex_model.fit(X_train, y_train, epochs=10, validation_data = (X_val, y_val))
+history = complex_model.fit(train_ds, epochs=MAX_EPOCHS, validation_data=val_ds, callbacks=callbacks_for("complex_model"))
 plot_history(history, "Complex Model")
-confusion_mtx_complex = compute_confusion_matrix(complex_model, X_val, y_val)
+confusion_mtx_complex = compute_confusion_matrix(complex_model, val_ds)
 plot_confusion_matrix(confusion_mtx_complex, classes = range(9), title="CMatrix - Complex Model")
-complex_model.save('models/complex_model')
+complex_model.save(os.path.join(MODELS_DIR, "complex_model.keras"))
 
 # test models
-test_loss_basic, test_acc_basic = basic_model.evaluate(X_test, y_test)
+test_loss_basic, test_acc_basic = basic_model.evaluate(test_ds)
 print("---Basic Model Test\nTest Loss: {0}\nTest Accuracy: {1}".format(test_acc_basic, test_acc_basic))
-test_loss_complex, test_acc_complex = complex_model.evaluate(X_test, y_test)
+test_loss_complex, test_acc_complex = complex_model.evaluate(test_ds)
 print("---Complex Model Test\nTest Loss: {0}\nTest Accuracy: {1}".format(test_acc_complex, test_acc_complex))
 
-show_images(X_train, y_train, classes)
+sample_images, sample_labels = next(iter(train_ds))
+show_images(sample_images.numpy(), sample_labels.numpy(), classes)
 
 plt.tight_layout() # for beautiful plots
 plt.show() # to pause execution

@@ -15,8 +15,24 @@ CNNs are trained from the German Trafic Sign Dataset from https://sid.erda.dk/pu
    German Traffic Sign Dataset page linked above, and unpack the per-class `.ppm` image folders
    into `data/train/` so that the layout matches the structure shown below.
 3. Run `python image_preprocessing.py` once to resize all training images in place to 50x50.
-4. Run `python training.py` to train the basic and complex CNNs. The trained complex model is
-   saved to `models/complex_model`.
+4. Run `python training.py` to train the basic and complex CNNs. Both models train with
+   `EarlyStopping`/`ModelCheckpoint` (monitoring `val_loss`, up to 100 epochs) instead of a fixed
+   epoch count. The trained complex model is saved to `models/complex_model.keras`; best-epoch
+   checkpoint weights for both models are saved to `models/{basic,complex}_model_best.weights.h5`.
+
+## Module layout
+
+Data loading, model definitions, and plotting were split out of the old `utils.py` grab-bag:
+
+- `labels.py` — the `classes` dict (class index -> label string).
+- `data.py` — `load_training_data`, now backed by a `tf.data.Dataset` pipeline (file listing +
+  PIL-decoded `.ppm` images, since `.ppm` isn't natively supported by `tf.io`/
+  `image_dataset_from_directory`) instead of loading everything into memory up front.
+- `models.py` — `get_basic_model`, `get_complex_model`.
+- `plotting.py` — `show_images`, `plot_history`, `plot_confusion_matrix`,
+  `compute_confusion_matrix`.
+- `utils.py` — thin re-export shim over the above, so `from utils import get_complex_model,
+  classes` (and the other original names) still works unchanged.
 
 The dataset structure should be:
 
@@ -83,10 +99,10 @@ Labels of all classes:
 `predict.py` runs the trained CNN live against a webcam or a video file:
 
 ```
-python predict.py --model models/complex_model --source 0 --threshold 0.6
+python predict.py --model models/complex_model.keras --source 0 --threshold 0.6
 ```
 
-- `--model`: path to a trained Keras model directory (default `models/complex_model`, the
+- `--model`: path to a trained Keras model file (default `models/complex_model.keras`, the
   output of `training.py`).
 - `--source`: webcam index (e.g. `0`) or a path to a video file (default `0`).
 - `--threshold`: minimum classification confidence (0-1) required to draw a label (default
