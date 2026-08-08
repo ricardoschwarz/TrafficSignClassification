@@ -5,6 +5,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - Dependencies are pinned in `requirements.txt` (tensorflow 2.16.1, validated against Python 3.12). TensorFlow does not yet publish wheels for very new CPython releases (e.g. 3.14 at time of writing) — if the system `python3` is too new for the pin, use a tool like `uv python install 3.12` to get a compatible interpreter for a venv rather than assuming `pip install -r requirements.txt` will resolve on any Python.
 - Run order: `image_preprocessing.py` once (resizes `data/train/**/*.ppm` in place to 50x50, overwriting originals), then `training.py`. See README Setup section for dataset download/layout.
 - `data/` and `models/` are gitignored; `training.py` writes the trained complex model to `models/complex_model`.
+- `predict.py` runs live inference (webcam or video file) against a trained model, using `detect.py` as a classic HSV color/contour heuristic to propose candidate regions (not a trained detector). See README's "Live inference" section for flags/usage.
 
 ## Maintaining this file
 
