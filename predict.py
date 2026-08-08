@@ -8,7 +8,7 @@ Pipeline per frame:
   3. Boxes/labels are drawn on the frame when confidence exceeds --threshold.
 
 Usage:
-  python predict.py --model models/complex_model --source 0 --threshold 0.6
+  python predict.py --model models/complex_model.keras --source 0 --threshold 0.6
 Press 'q' to quit.
 """
 
@@ -25,8 +25,8 @@ INPUT_SIZE = (50, 50)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Live traffic sign detection and classification")
-    parser.add_argument("--model", default="models/complex_model",
-                         help="Path to a trained Keras model (default: models/complex_model)")
+    parser.add_argument("--model", default="models/complex_model.keras",
+                         help="Path to a trained Keras model (default: models/complex_model.keras)")
     parser.add_argument("--source", default="0",
                          help="Video source: webcam index (e.g. 0) or path to a video file (default: 0)")
     parser.add_argument("--threshold", type=float, default=0.6,
